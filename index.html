@@ -186,9 +186,11 @@
 
       ctx.drawImage(img, x, y, w, h);
 
-      // Cover Veo watermark (bottom-right corner)
+      // Cover Veo watermark (bottom-right corner) - responsive size
       ctx.fillStyle = '#000';
-      ctx.fillRect(x + w - 130, y + h - 55, 130, 55);
+      const coverW = Math.min(130, w * 0.08);
+      const coverH = Math.min(55, h * 0.05);
+      ctx.fillRect(x + w - coverW, y + h - coverH, coverW, coverH);
     }
 
     window.addEventListener('scroll', () => {
