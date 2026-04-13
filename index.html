@@ -245,6 +245,33 @@
 
       ctx.drawImage(img, x, y, w, h);
 
+      // Fade edges to black so no border is visible
+      const edgeSize = 40;
+      // Top
+      const gradTop = ctx.createLinearGradient(0, y, 0, y + edgeSize);
+      gradTop.addColorStop(0, '#000');
+      gradTop.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gradTop;
+      ctx.fillRect(x, y, w, edgeSize);
+      // Bottom
+      const gradBot = ctx.createLinearGradient(0, y + h - edgeSize, 0, y + h);
+      gradBot.addColorStop(0, 'rgba(0,0,0,0)');
+      gradBot.addColorStop(1, '#000');
+      ctx.fillStyle = gradBot;
+      ctx.fillRect(x, y + h - edgeSize, w, edgeSize);
+      // Left
+      const gradLeft = ctx.createLinearGradient(x, 0, x + edgeSize, 0);
+      gradLeft.addColorStop(0, '#000');
+      gradLeft.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gradLeft;
+      ctx.fillRect(x, y, edgeSize, h);
+      // Right
+      const gradRight = ctx.createLinearGradient(x + w - edgeSize, 0, x + w, 0);
+      gradRight.addColorStop(0, 'rgba(0,0,0,0)');
+      gradRight.addColorStop(1, '#000');
+      ctx.fillStyle = gradRight;
+      ctx.fillRect(x + w - edgeSize, y, edgeSize, h);
+
       // Cover Veo watermark (bottom-right corner) - responsive size
       ctx.fillStyle = '#000';
       const coverW = Math.min(160, w * 0.12);
