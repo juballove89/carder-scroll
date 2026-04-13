@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CARDER — Scroll Experience</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 3rem;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.25);
+      animation: pulse 2s infinite;
+    }
+
+    .scroll-hint span {
+      display: block;
+      width: 24px;
+      height: 40px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      margin: 0.75rem auto 0;
+      position: relative;
+    }
+
+    .scroll-hint span::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      width: 4px;
+      height: 8px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 2px;
+      transform: translateX(-50%);
+      animation: scrollDot 2s infinite;
+    }
+
+    @keyframes scrollDot {
+      0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Scroll Animation Section */
+    .scroll-container {
+      height: 500vh;
+      position: relative;
+    }
+
+    .sticky-frame {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .frame-canvas {
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+    }
+
+    /* Overlay text that appears during scroll */
+    .scroll-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 8vh;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .scroll-overlay.visible {
+      opacity: 1;
+    }
+
+    .scroll-overlay h2 {
+      font-size: clamp(1.5rem, 3.5vw, 3rem);
+      font-weight: 700;
+      text-align: center;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+    }
+
+    .scroll-overlay p {
+      font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+      color: rgba(255,255,255,0.6);
+      margin-top: 0.5rem;
+      text-shadow: 0 1px 10px rgba(0,0,0,0.8);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 15vh 5vw;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .features h2 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 900;
+      margin-bottom: 4rem;
+      text-align: center;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      transition: transform 0.3s, background 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 8rem 5vw;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .footer h2 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer p {
+      color: rgba(255,255,255,0.4);
+      font-size: 1rem;
+    }
+
+    /* Loading */
+    .loading {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s;
+    }
+
+    .loading.done {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-bar {
+      width: 200px;
+      height: 2px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 1px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .loading-bar-fill {
+      height: 100%;
+      background: #fff;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .loading p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div class="loading" id="loading">
+    <p>Loading frames...</p>
+    <div class="loading-bar">
+      <div class="loading-bar-fill" id="loadingFill"></div>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>CARDER</h1>
+    <p>Portable Escape Room Control System</p>
+    <div class="scroll-hint">
+      Scroll to explore
+      <span></span>
+    </div>
+  </section>
+
+  <!-- Scroll Animation -->
+  <section class="scroll-container" id="scrollSection">
+    <div class="sticky-frame">
+      <canvas class="frame-canvas" id="frameCanvas"></canvas>
+    </div>
+  </section>
+
+  <!-- Overlay Text -->
+  <div class="scroll-overlay" id="scrollOverlay">
+    <h2>Every component, engineered to perfection.</h2>
+    <p>Monitor &middot; Switches &middot; Relays &middot; Circuit Boards &middot; Power Supply</p>
+  </div>
+
+  <!-- Features -->
+  <section class="features">
+    <h2>What's Inside</h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="icon">🖥️</div>
+        <h3>7" Touchscreen</h3>
+        <p>실시간 방탈출 진행 상황 모니터링. 직관적인 터치 인터페이스로 모든 장치를 한 눈에.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔘</div>
+        <h3>Control Panel</h3>
+        <p>토글 스위치, 푸시 버튼, 인디케이터 LED. 모든 장치를 물리적으로 제어.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">⚡</div>
+        <h3>Relay Modules</h3>
+        <p>다중 릴레이 모듈로 전자 자물쇠, 조명, 사운드 등 다양한 장치 동시 제어.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🧳</div>
+        <h3>Portable Design</h3>
+        <p>견고한 하드쉘 수트케이스에 모든 것을 담아 어디든 이동 가능한 방탈출 시스템.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <section class="footer">
+    <h2>Built for Escape.</h2>
+    <p>CARDER — Where engineering meets adventure.</p>
+  </section>
+
+  <script>
+    const TOTAL_FRAMES = 240;
+    const canvas = document.getElementById('frameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scrollSection = document.getElementById('scrollSection');
+    const scrollOverlay = document.getElementById('scrollOverlay');
+    const loading = document.getElementById('loading');
+    const loadingFill = document.getElementById('loadingFill');
+
+    // Preload all frames
+    const frames = [];
+    let loadedCount = 0;
+
+    function preloadFrames() {
+      for (let i = 1; i <= TOTAL_FRAMES; i++) {
+        const img = new Image();
+        const num = String(i).padStart(4, '0');
+        img.src = `frames/frame_${num}.jpg`;
+        img.onload = () => {
+          loadedCount++;
+          loadingFill.style.width = (loadedCount / TOTAL_FRAMES * 100) + '%';
+          if (loadedCount === TOTAL_FRAMES) {
+            loading.classList.add('done');
+            resizeCanvas();
+            renderFrame(0);
+          }
+        };
+        frames.push(img);
+      }
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function renderFrame(index) {
+      const img = frames[Math.max(0, Math.min(index, TOTAL_FRAMES - 1))];
+      if (!img || !img.complete) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw image to fit canvas (contain)
+      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
+
+      ctx.drawImage(img, x, y, w, h);
+    }
+
+    // Scroll handler
+    window.addEventListener('scroll', () => {
+      const rect = scrollSection.getBoundingClientRect();
+      const sectionHeight = scrollSection.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
+
+      // Map progress to frame index
+      const frameIndex = Math.floor(progress * (TOTAL_FRAMES - 1));
+      renderFrame(frameIndex);
+
+      // Show overlay text at certain progress
+      if (progress > 0.4 && progress < 0.9) {
+        scrollOverlay.classList.add('visible');
+      } else {
+        scrollOverlay.classList.remove('visible');
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      // Re-render current frame
+      const rect = scrollSection.getBoundingClientRect();
+      const sectionHeight = scrollSection.offsetHeight - window.innerHeight;
+      const scrolled = -rect.top;
+      const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
+      const frameIndex = Math.floor(progress * (TOTAL_FRAMES - 1));
+      renderFrame(frameIndex);
+    });
+
+    preloadFrames();
+  </script>
+
+</body>
+</html>
