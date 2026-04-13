@@ -9,7 +9,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #1a1a1a;
+      background: #000;
       color: #fff;
       font-family: 'League Spartan', sans-serif;
       overflow-x: hidden;
@@ -22,7 +22,7 @@
       justify-content: center;
       align-items: center;
       text-align: center;
-      background: #1a1a1a;
+      background: #000;
     }
 
     .hero h1 {
@@ -56,7 +56,7 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: #1a1a1a;
+      background: #000;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -123,8 +123,7 @@
     const frames = [];
     let loadedCount = 0;
 
-    // Sample a pixel from the bottom of the first frame to match background
-    let bgColor = '#1a1a1a';
+    let videoBgColor = [0, 0, 0];
 
     function preloadFrames() {
       for (let i = 1; i <= TOTAL_FRAMES; i++) {
@@ -135,21 +134,18 @@
           loadedCount++;
           loadingFill.style.width = (loadedCount / TOTAL_FRAMES * 100) + '%';
           if (loadedCount === TOTAL_FRAMES) {
-            // Sample background color from bottom-center of last frame
+            // Sample background color from bottom-center of first frame (assembled suitcase)
             const tmpCanvas = document.createElement('canvas');
             const tmpCtx = tmpCanvas.getContext('2d');
-            tmpCanvas.width = frames[TOTAL_FRAMES-1].width;
-            tmpCanvas.height = frames[TOTAL_FRAMES-1].height;
-            tmpCtx.drawImage(frames[TOTAL_FRAMES-1], 0, 0);
-            const pixel = tmpCtx.getImageData(tmpCanvas.width/2, tmpCanvas.height - 5, 1, 1).data;
-            bgColor = 'rgb(' + pixel[0] + ',' + pixel[1] + ',' + pixel[2] + ')';
-            document.body.style.background = bgColor;
-            document.querySelector('.hero').style.background = bgColor;
-            document.querySelector('.loading').style.background = bgColor;
+            tmpCanvas.width = frames[0].width;
+            tmpCanvas.height = frames[0].height;
+            tmpCtx.drawImage(frames[0], 0, 0);
+            const pixel = tmpCtx.getImageData(tmpCanvas.width / 2, tmpCanvas.height - 5, 1, 1).data;
+            videoBgColor = [pixel[0], pixel[1], pixel[2]];
 
             loading.classList.add('done');
             resizeCanvas();
-            renderFrame(TOTAL_FRAMES - 1);
+            renderFrame(TOTAL_FRAMES - 1, 0);
           }
         };
         frames.push(img);
@@ -157,28 +153,41 @@
     }
 
     function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.scale(dpr, dpr);
     }
 
-    function renderFrame(index) {
+    function renderFrame(index, progress) {
       const img = frames[Math.max(0, Math.min(index, TOTAL_FRAMES - 1))];
       if (!img || !img.complete) return;
 
-      // Fill canvas with matched background color
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Blend background: black at start (progress=0), video color when suitcase visible
+      const t = Math.max(0, Math.min(1, (progress || 0) * 3)); // transition in first 33%
+      const r = Math.round(videoBgColor[0] * t);
+      const g = Math.round(videoBgColor[1] * t);
+      const b = Math.round(videoBgColor[2] * t);
+      const currentBg = 'rgb(' + r + ',' + g + ',' + b + ')';
 
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      ctx.fillStyle = currentBg;
+      ctx.fillRect(0, 0, vw, vh);
+
+      const scale = Math.min(vw / img.width, vh / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
-      const x = (canvas.width - w) / 2;
-      const y = (canvas.height - h) / 2;
+      const x = (vw - w) / 2;
+      const y = (vh - h) / 2;
 
       ctx.drawImage(img, x, y, w, h);
 
       // Cover Veo watermark (bottom-right corner)
-      ctx.fillStyle = bgColor;
+      ctx.fillStyle = currentBg;
       ctx.fillRect(x + w - 120, y + h - 50, 120, 50);
     }
 
@@ -190,7 +199,7 @@
 
       // Reverse: start from last frame (exploded/dark), scroll to first frame (assembled)
       const frameIndex = TOTAL_FRAMES - 1 - Math.floor(progress * (TOTAL_FRAMES - 1));
-      renderFrame(frameIndex);
+      renderFrame(frameIndex, 1 - progress);
     });
 
     window.addEventListener('resize', () => {
@@ -200,7 +209,7 @@
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
       const frameIndex = TOTAL_FRAMES - 1 - Math.floor(progress * (TOTAL_FRAMES - 1));
-      renderFrame(frameIndex);
+      renderFrame(frameIndex, 1 - progress);
     });
 
     preloadFrames();
