@@ -185,10 +185,10 @@
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, vw, vh);
 
-      // Mobile: bigger scale, Desktop: contain
+      // Mobile: much bigger, Desktop: contain
       const isMobile = vw < 768;
       const scale = isMobile
-        ? Math.max(vw / img.width, vh / img.height) * 0.85
+        ? (vw / img.width) * 2.2
         : Math.min(vw / img.width, vh / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
@@ -199,8 +199,8 @@
 
       // Cover Veo watermark (bottom-right corner) - responsive size
       ctx.fillStyle = '#000';
-      const coverW = Math.min(130, w * 0.08);
-      const coverH = Math.min(55, h * 0.05);
+      const coverW = Math.min(160, w * 0.12);
+      const coverH = Math.min(90, h * 0.12);
       ctx.fillRect(x + w - coverW, y + h - coverH, coverW, coverH);
     }
 
