@@ -32,8 +32,13 @@
       line-height: 1;
     }
 
+    .spacer {
+      height: 80vh;
+      background: #000;
+    }
+
     .scroll-container {
-      height: 500vh;
+      height: 800vh;
       position: relative;
     }
 
@@ -105,6 +110,8 @@
   <section class="hero">
     <h1>UNREAL 007 CASE</h1>
   </section>
+
+  <div class="spacer"></div>
 
   <section class="scroll-container" id="scrollSection">
     <div class="sticky-frame">
@@ -178,7 +185,11 @@
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, vw, vh);
 
-      const scale = Math.min(vw / img.width, vh / img.height);
+      // Mobile: bigger scale, Desktop: contain
+      const isMobile = vw < 768;
+      const scale = isMobile
+        ? Math.max(vw / img.width, vh / img.height) * 0.85
+        : Math.min(vw / img.width, vh / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
       const x = (vw - w) / 2;
