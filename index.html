@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UNREAL 007 CASE</title>
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #000;
+      background: #1a1a1a;
       color: #fff;
-      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      font-family: 'League Spartan', sans-serif;
       overflow-x: hidden;
     }
 
@@ -21,6 +22,7 @@
       justify-content: center;
       align-items: center;
       text-align: center;
+      background: #1a1a1a;
     }
 
     .hero h1 {
@@ -54,7 +56,7 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: #000;
+      background: #1a1a1a;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -87,6 +89,7 @@
     .loading p {
       font-size: 0.85rem;
       color: rgba(255,255,255,0.4);
+      font-family: 'League Spartan', sans-serif;
     }
   </style>
 </head>
@@ -120,6 +123,9 @@
     const frames = [];
     let loadedCount = 0;
 
+    // Sample a pixel from the bottom of the first frame to match background
+    let bgColor = '#1a1a1a';
+
     function preloadFrames() {
       for (let i = 1; i <= TOTAL_FRAMES; i++) {
         const img = new Image();
@@ -129,9 +135,21 @@
           loadedCount++;
           loadingFill.style.width = (loadedCount / TOTAL_FRAMES * 100) + '%';
           if (loadedCount === TOTAL_FRAMES) {
+            // Sample background color from bottom-center of last frame
+            const tmpCanvas = document.createElement('canvas');
+            const tmpCtx = tmpCanvas.getContext('2d');
+            tmpCanvas.width = frames[TOTAL_FRAMES-1].width;
+            tmpCanvas.height = frames[TOTAL_FRAMES-1].height;
+            tmpCtx.drawImage(frames[TOTAL_FRAMES-1], 0, 0);
+            const pixel = tmpCtx.getImageData(tmpCanvas.width/2, tmpCanvas.height - 5, 1, 1).data;
+            bgColor = 'rgb(' + pixel[0] + ',' + pixel[1] + ',' + pixel[2] + ')';
+            document.body.style.background = bgColor;
+            document.querySelector('.hero').style.background = bgColor;
+            document.querySelector('.loading').style.background = bgColor;
+
             loading.classList.add('done');
             resizeCanvas();
-            renderFrame(0);
+            renderFrame(TOTAL_FRAMES - 1);
           }
         };
         frames.push(img);
@@ -147,7 +165,9 @@
       const img = frames[Math.max(0, Math.min(index, TOTAL_FRAMES - 1))];
       if (!img || !img.complete) return;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Fill canvas with matched background color
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
       const w = img.width * scale;
@@ -157,9 +177,9 @@
 
       ctx.drawImage(img, x, y, w, h);
 
-      // Cover Veo watermark (bottom-right)
-      ctx.fillStyle = '#000';
-      ctx.fillRect(x + w - 100, y + h - 40, 100, 40);
+      // Cover Veo watermark (bottom-right corner)
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(x + w - 120, y + h - 50, 120, 50);
     }
 
     window.addEventListener('scroll', () => {
@@ -168,7 +188,8 @@
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
 
-      const frameIndex = Math.floor(progress * (TOTAL_FRAMES - 1));
+      // Reverse: start from last frame (exploded/dark), scroll to first frame (assembled)
+      const frameIndex = TOTAL_FRAMES - 1 - Math.floor(progress * (TOTAL_FRAMES - 1));
       renderFrame(frameIndex);
     });
 
@@ -178,7 +199,7 @@
       const sectionHeight = scrollSection.offsetHeight - window.innerHeight;
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
-      const frameIndex = Math.floor(progress * (TOTAL_FRAMES - 1));
+      const frameIndex = TOTAL_FRAMES - 1 - Math.floor(progress * (TOTAL_FRAMES - 1));
       renderFrame(frameIndex);
     });
 
