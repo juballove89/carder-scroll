@@ -337,7 +337,7 @@
           if (loadedCount === TOTAL_FRAMES) {
             loading.classList.add('done');
             resizeCanvas();
-            renderFrame(0);
+            renderFrame(TOTAL_FRAMES - 1);
           }
         };
         frames.push(img);
@@ -363,6 +363,10 @@
       const y = (canvas.height - h) / 2;
 
       ctx.drawImage(img, x, y, w, h);
+
+      // Cover Veo watermark (bottom-right)
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x + w - 80, y + h - 35, 80, 35);
     }
 
     // Scroll handler
@@ -372,8 +376,8 @@
       const scrolled = -rect.top;
       const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
 
-      // Map progress to frame index
-      const frameIndex = Math.floor(progress * (TOTAL_FRAMES - 1));
+      // Map progress to frame index (REVERSED - starts from last frame/black)
+      const frameIndex = TOTAL_FRAMES - 1 - Math.floor(progress * (TOTAL_FRAMES - 1));
       renderFrame(frameIndex);
 
       // Show overlay text at certain progress
