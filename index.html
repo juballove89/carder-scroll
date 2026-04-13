@@ -175,7 +175,7 @@
       const vw = window.innerWidth;
       const vh = window.innerHeight;
 
-      ctx.fillStyle = currentBg;
+      ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, vw, vh);
 
       const scale = Math.min(vw / img.width, vh / img.height);
@@ -187,8 +187,8 @@
       ctx.drawImage(img, x, y, w, h);
 
       // Cover Veo watermark (bottom-right corner)
-      ctx.fillStyle = currentBg;
-      ctx.fillRect(x + w - 120, y + h - 50, 120, 50);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x + w - 130, y + h - 55, 130, 55);
     }
 
     window.addEventListener('scroll', () => {
